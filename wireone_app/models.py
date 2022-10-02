@@ -1,63 +1,93 @@
 from django.db import models
-
+import json
 # Create your models here.
 
 class DBP(models.Model):
-    distance = models.IntegerField()
-    price = models.IntegerField()
+    data = models.CharField(max_length=10000)
+    enabled = models.BooleanField(default=False)
+    def save(self, *args, **kwargs):
+        if self.enabled:
+            try:
+                temp = DBP.objects.get(enabled=True)
+                if self != temp:
+                    temp.enabled = False
+                    temp.save()
+            except DBP.DoesNotExist:
+                pass
+        super(DBP, self).save(*args, **kwargs)
 
 class TMF(models.Model):
-    Time = models.IntegerField()
-    price = models.DecimalField(max_digits = 5, decimal_places = 2)
+    data = models.CharField(max_length=10000)
+    enabled = models.BooleanField(default=False)
+    def save(self, *args, **kwargs):
+        if self.enabled:
+            try:
+                temp = TMF.objects.get(enabled=True)
+                if self != temp:
+                    temp.enabled = False
+                    temp.save()
+            except TMF.DoesNotExist:
+                pass
+        super(TMF, self).save(*args, **kwargs)
+
+class DAP(models.Model):
+    value = models.IntegerField()
+    enabled = models.BooleanField(default=False)
+    def save(self, *args, **kwargs):
+        if self.enabled:
+            try:
+                temp = DAP.objects.get(enabled=True)
+                if self != temp:
+                    temp.enabled = False
+                    temp.save()
+            except DAP.DoesNotExist:
+                pass
+        super(DAP, self).save(*args, **kwargs)
 
 class Price(models.Model):
     Total_distance = models.IntegerField()
     Total_time = models.IntegerField()
-    dap = models.IntegerField()
     price = models.IntegerField(default = 0)
 
     
     def save(self, *args, **kwargs):
-        # Get all data from DBP table
-        dbp_table = DBP.objects.all()
         # making copy of total distance
         self.temp_total_distance = self.Total_distance
 
-        # initial DBP price
+        # Get all data from DBP table
+        dbp_table = DBP.objects.filter(enabled = True)
+        
+        self.json_dbp_data = json.loads(str(dbp_table[0].data))
         self.dbp_price = 0
-
-        # If price is less than equal to largest distance in table then its value is stored and loop is broken
-        for x in dbp_table:
-            if self.temp_total_distance <= x.distance:
-                self.dbp_price = x.price
-                self.temp_total_distance = self.temp_total_distance - x.distance
-                if self.temp_total_distance < 0:
-                    self.temp_total_distance = 0
+        for x in self.json_dbp_data:
+            if self.temp_total_distance < x['distance']:
+                self.price += x['price']
+                self.temp_total_distance -= x['distance']
                 break
         
-        # In case distance travelled is greater than max distance in DBP table then we get max distance prce subtract it and then use DPA for left distance
         if self.dbp_price == 0:
-            tt = DBP.objects.aggregate(models.Max('distance'))
-            tt_price  = DBP.objects.get(distance = tt['distance__max'])
-            self.dbp_price = tt_price.price
-            self.temp_total_distance = self.temp_total_distance - tt['distance__max']
-
+            self.dbp_price = self.json_dbp_data[-1]['price']
+            self.price += self.dbp_price
+            self.temp_total_distance = self.temp_total_distance - self.json_dbp_data[-1]['distance']
+        
         # Get all data from TMF table
-        tmf_table = TMF.objects.all()
+        tmf_table = TMF.objects.filter(enabled = True)
         self.tmf_price = 0
-        # If time is less than equal to largest time in table then its value is stored and loop is broken
-        for x in tmf_table:
-            if self.Total_time <= x.Time:
-                self.tmf_price = x.price
+        self.json_tmf_data = json.loads(str(tmf_table[0].data))
+        for x in self.json_tmf_data:
+            if self.Total_time <= x['time']:
+                self.tmf_price += x['price']
                 break
-        # In case time is greater than max time in TMF table then we get max time price and use it 
+
         if self.tmf_price == 0:
-            tt = TMF.objects.aggregate(models.Max('Time'))
-            tt_price  = TMF.objects.get(Time = tt['Time__max'])
-            self.tmf_price = tt_price.price
+            self.tmf_price = self.json_tmf_data[-1]['price']
+
+        # Get all data from DAP table
+        dap_table = DAP.objects.filter(enabled = True)
+        self.dap_price = dap_table[0].value
 
         # Calculating price
-        self.dap_price = self.dap * self.temp_total_distance
+        self.dap_price = self.dap_price * self.temp_total_distance
         self.price = (float(self.dbp_price) + float(self.dap_price)) * float(self.tmf_price)
 
         # Saving price in DB
