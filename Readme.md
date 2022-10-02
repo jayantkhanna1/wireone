@@ -25,9 +25,43 @@ http://127.0.0.1:8000/new_DBP
 Make sure to add following form data 
 
 ```
-distance: <INTEGER VALUE (in Km)>
-price : <INTEGER VALUE (in Rs)>
+data: [
+        {
+            "distance": <INTEGER VALUE (in km)>,
+            "price": <INTEGER VALUE (in Rs)>
+        },
+        {
+            "distance": <INTEGER VALUE (in km)>,
+            "price": <INTEGER VALUE (in RS)>
+        },
+    ]
+enabled : <STRING VALUE ("true"/"false")>
 ```
+
+### Update DBP
+Post on following endpoint to create a DAP
+
+```
+http://127.0.0.1:8000/update_DBP
+```
+
+Make sure to add following form data 
+
+```
+id : <INTEGER VALUE (id of DBP)>
+data: [
+        {
+            "distance": <INTEGER VALUE (in km)>,
+            "price": <INTEGER VALUE (in Rs)>
+        },
+        {
+            "distance": <INTEGER VALUE (in km)>,
+            "price": <INTEGER VALUE (in RS)>
+        },
+    ]
+enabled : <STRING VALUE ("true"/"false")>
+```
+
 
 ### Create TMF
 Post on following endpoint to create a TMF
@@ -39,8 +73,70 @@ http://127.0.0.1:8000/new_TMF
 Make sure to add following form data 
 
 ```
-time: <INTEGER VALUE (in hours)>
-factor : <Float VALUE>
+data: [
+        {
+            "time": <INTEGER VALUE (in hrs)>,
+            "price": <INTEGER VALUE (in Rs)>
+        },
+        {
+            "time": <INTEGER VALUE (in hrs)>,
+            "price": <INTEGER VALUE (in RS)>
+        },
+    ]
+enabled : <STRING VALUE ("true"/"false")>
+```
+
+### Update TMF
+Post on following endpoint to create a DAP
+
+```
+http://127.0.0.1:8000/update_TMF
+```
+
+Make sure to add following form data 
+
+```
+id : <INTEGER VALUE (id of TMF)>
+data: [
+        {
+            "time": <INTEGER VALUE (in hrs)>,
+            "price": <INTEGER VALUE (in Rs)>
+        },
+        {
+            "time": <INTEGER VALUE (in hrs)>,
+            "price": <INTEGER VALUE (in RS)>
+        },
+    ]
+enabled : <STRING VALUE ("true"/"false")>
+```
+
+### Create DAP
+Post on following endpoint to create a DAP
+
+```
+http://127.0.0.1:8000/new_DAP
+```
+
+Make sure to add following form data 
+
+```
+value : <INTEGER VALUE (in Rs)>
+enabled : <STRING VALUE ("true"/"false")>
+```
+
+### Update DAP
+Post on following endpoint to create a DAP
+
+```
+http://127.0.0.1:8000/update_DAP
+```
+
+Make sure to add following form data 
+
+```
+id : <INTEGER VALUE (id of DAP)>
+value : <INTEGER VALUE (in Rs)>
+enabled : <STRING VALUE ("true"/"false")>
 ```
 
 ### Get all Prices:
@@ -72,9 +168,18 @@ Make sure to add following form data
 ```
 total_distance: <INTEGER VALUE (in Km)>
 total_time : <INTEGER VALUE (in hours)>
-dap : <INTEGER VALUE (in Rs)>
 ```
 
+Return Value: 
+
+```
+{
+    "id": <ID>,
+    "total_distance": <INTEGER VALUE (in Km)>,
+    "total_time": <INTEGER VALUE (in hours)>,
+    "total_price": <INTEGER VALUE (in Rs)>
+}
+```
 
 # For UI:
 
