@@ -18,9 +18,15 @@ class Price(models.Model):
 
     
     def save(self, *args, **kwargs):
+        # Get all data from DBP table
         dbp_table = DBP.objects.all()
+        # making copy of total distance
         self.temp_total_distance = self.Total_distance
+
+        # initial DBP price
         self.dbp_price = 0
+
+        # If price is less than equal to largest distance in table then its value is stored and loop is broken
         for x in dbp_table:
             if self.temp_total_distance <= x.distance:
                 self.dbp_price = x.price
@@ -28,32 +34,31 @@ class Price(models.Model):
                 if self.temp_total_distance < 0:
                     self.temp_total_distance = 0
                 break
+        
+        # In case distance travelled is greater than max distance in DBP table then we get max distance prce subtract it and then use DPA for left distance
         if self.dbp_price == 0:
             tt = DBP.objects.aggregate(models.Max('distance'))
             tt_price  = DBP.objects.get(distance = tt['distance__max'])
             self.dbp_price = tt_price.price
             self.temp_total_distance = self.temp_total_distance - tt['distance__max']
 
-        print(self.dbp_price)
-        print(self.temp_total_distance)
+        # Get all data from TMF table
         tmf_table = TMF.objects.all()
         self.tmf_price = 0
+        # If time is less than equal to largest time in table then its value is stored and loop is broken
         for x in tmf_table:
             if self.Total_time <= x.Time:
                 self.tmf_price = x.price
                 break
-        
+        # In case time is greater than max time in TMF table then we get max time price and use it 
         if self.tmf_price == 0:
             tt = TMF.objects.aggregate(models.Max('Time'))
             tt_price  = TMF.objects.get(Time = tt['Time__max'])
             self.tmf_price = tt_price.price
 
-        print(self.tmf_price)
-
+        # Calculating price
         self.dap_price = self.dap * self.temp_total_distance
-
-        print(self.dap_price)
-
         self.price = (float(self.dbp_price) + float(self.dap_price)) * float(self.tmf_price)
 
+        # Saving price in DB
         super(Price, self).save(*args, **kwargs)
